@@ -5,8 +5,10 @@
 #include<iostream>
 #include<fstream>
 #include<opencv2/opencv.hpp>
+#include<vector>
 #include "features.hpp"
 #include<dirent.h>
+#include "csv_util.h"
 
 
 using namespace std;
@@ -25,7 +27,7 @@ int main(int argc, char *argv[]){
     int i;
 
     // Checking for sufficient arguments
-    if(argc < 3){
+    if(argc < 4){
         cout<<"Usage: "<<argv[1]<<"<directory path> <feature type> <csv file>\n";
         exit(-1);
     }
@@ -46,58 +48,88 @@ int main(int argc, char *argv[]){
 
     // Get the csv file name
     strcpy(csvfileName, argv[3]);
-    csvFile.open(csvfileName, fstream::in | fstream::out | fstream::app);
-    // If file exists append if not then append to it
-    if(!csvFile){
-        cout<<"Cannot open file, file doesnot exits, creating new file";
-
-        csvFile.open(csvfileName, fstream::in | fstream::out | fstream::trunc);
-        csvFile.close();
-    }
-    else{ //user existing file
-        cout<<"Success"<<csvfileName<<"found \n";
-        cout<<"Writing on existing file"<<"\n";
-
-        csvFile.close();
-        cout<<"\n";
-    }
+   
  
-
+    vector<float> featureVector;
     // Loop over all the files in the image file listing
     while( (dp = readdir(dirp)) != NULL ){
 
         // Check if the file is an image
         if( strstr(dp->d_name, ".jpg") || strstr(dp->d_name, ".png") || strstr(dp->d_name, ".ppm") || strstr(dp->d_name, ".tif") ){
 
-            cout<<"Processing image files: "<<dp->d_name<<"\n";
+            //cout<<"Processing image files: "<<dp->d_name<<"\n";
 
             // Build the overall filename
             strcpy(buffer, dirname);
             strcat(buffer, "/");
             strcat(buffer, dp->d_name);
 
-            // cout<<"Full path name: "<<buffer<<"\n";
+            //cout<<"Full path name: "<<buffer<<"\n";
 
-            cv::Mat image = cv::imread(buffer);
+            cv::Mat hist;
+
+            cv::Mat img = cv::imread(buffer);
+            cv::Mat image = img.clone();
+            // cv::Mat temp;
+            // image.convertTo(temp,  CV_32F, 1.0/255);
             if(image.empty()){
                 cout<<"Error: Unable to read image:"<<buffer<<endl;
                 continue;
             }
 
-
             // Computing the feature for target images
+            featureType = atoi(argv[2]);
             switch(featureType){
                 // case "Baseline": 
                 // case "baseline":
                 case 1:
-                    cv::Mat featureVector;
                     featureVector = baseline(image);
                     break;
-                // default:
-                //     break;
+                case 2:
+                    featureVector = singleHM(image);
+                    break;
+                case 3:
+                    featureVector = multiHM(image);
+                    break;
+                default:
+                    cout<<"Invalid feature type"<<endl;
+                    break;
             }
+            
+
+            // cout<<featureVector;
+            // exit(-1);
+            
+            // Converting Mat to float vec
+            // if (!featureVector.isContinuous()) {
+            //     featureVector = featureVector.clone(); // Make a continuous copy
+            // }
+            
+            // cv::Mat tmp;
+            // featureVector.convertTo(tmp, CV_32F);
+            // //cv::Mat reshapedFeatureVector = featureVector.reshape(1,1);
+            // vector<float> featureVectorFloat;
+            // featureVectorFloat.assign((float*)featureVector.datastart, (float*)featureVector.dataend);
+
+            // Converting Mat to float vec
+            // vector<float> featureVectorFloat;
+            // for (int i = 0; i < featureVector.rows; ++i) {
+            //     for (int j = 0; j < featureVector.cols; ++j) {
+            //         featureVectorFloat.push_back(featureVector.at<float>(i, j));
+            //     }
+            // }
+
+            // for(int i=0;i<featureVectorFloat.size();i++){
+            //     cout<<featureVectorFloat[i]<<" ";
+            // }
+            // exit(-1);
+            
+
+            append_image_data_csv(csvfileName, dp->d_name, featureVector, 0);
 
         }
+
+
 
     }
 

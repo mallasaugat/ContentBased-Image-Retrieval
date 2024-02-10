@@ -118,6 +118,7 @@ int append_image_data_csv( char *filename, char *image_filename, std::vector<flo
     strcpy( mode, "w" );
   }
   
+  
   fp = fopen( filename, mode );
   if(!fp) {
     printf("Unable to open output file %s\n", filename );
@@ -127,9 +128,10 @@ int append_image_data_csv( char *filename, char *image_filename, std::vector<flo
   // write the filename and the feature vector to the CSV file
   strcpy(buffer, image_filename);
   std::fwrite(buffer, sizeof(char), strlen(buffer), fp );
+  // printf("%d", (int)image_data.size());
   for(int i=0;i<image_data.size();i++) {
     char tmp[256];
-    sprintf(tmp, ",%.4f", image_data[i] );
+    snprintf(tmp,sizeof(tmp), ",%.4f", image_data[i] );
     std::fwrite(tmp, sizeof(char), strlen(tmp), fp );
   }
       
