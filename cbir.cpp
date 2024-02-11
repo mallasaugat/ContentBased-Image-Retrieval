@@ -9,6 +9,7 @@
 #include "features.hpp"
 #include<dirent.h>
 #include "csv_util.h"
+#include<cstring>
 
 /*
     Given a directory on the command line, scans through the directory for image files.
@@ -56,14 +57,26 @@ int main(int argc, char *argv[]){
     DistanceFunction distanceM;
     
 
+    // Read feature vectors from file
+    vector<char *> filenames;
+    vector<vector<float>> data;
+    if(read_image_data_csv(featureVectorFile, filenames, data)!=0){
+        cout<<"Error: Unable to read feature vector file"<<endl;
+        exit(-1);
+    }
+
+    
     // Reading the target image
     cv::Mat tImage = cv::imread(targetImage);
     if(tImage.empty()){
             cout<<"Error: Unable to read image:"<<targetImage<<endl;
     }
 
+
     // Computing the features for the target image
+    char completeFN[256];
     vector<float> targetFeatures;
+    vector<float> targetFeatures_2;
     switch(featureType){
         case 1:
             targetFeatures = baseline(tImage);
@@ -75,20 +88,95 @@ int main(int argc, char *argv[]){
             break;
         case 3:
             targetFeatures = multiHM(tImage);
-            distanceM = &SSD;
+            distanceM = &histIntersection;
             break;
+        case 4:
+            targetFeatures = featureHM(tImage);
+            distanceM = &histIntersection;
+            break;
+        case 5:
+            for(size_t i=0; i<filenames.size(); ++i){
+                // Memory address
+                // if(filenames[i]==targetImage)
+                strcpy(completeFN, "olympus");
+                strcat(completeFN, "/");
+                strcat(completeFN, filenames[i]);
+
+                if(strlen(filenames[i])==0){
+                    cout<<"Error: Unable to read image:"<<completeFN<<endl;
+                    continue;
+                }
+
+                if(strcmp(completeFN,targetImage) == 0){
+                    targetFeatures = data[i];
+                }
+            }
+            
+            distanceM = &cosineDistance;
+            
+            break;
+
+        case 7:
+
+            targetFeatures = computeColorHistogram(tImage);
+
+            distanceM = &histIntersection;
+            
+            break;
+
+        case 8:
+            for(size_t i=0; i<filenames.size(); ++i){
+                // Memory address
+                // if(filenames[i]==targetImage)
+                strcpy(completeFN, "olympus");
+                strcat(completeFN, "/");
+                strcat(completeFN, filenames[i]);
+
+                if(strlen(filenames[i])==0){
+                    cout<<"Error: Unable to read image:"<<completeFN<<endl;
+                    continue;
+                }
+
+                if(strcmp(completeFN,targetImage) == 0){
+                    targetFeatures = data[i];
+                }
+            }
+            
+            distanceM = &histIntersection;
+            
+            break;
+
+        
+
+        case 9:    
+            for(size_t i=0; i<filenames.size(); ++i){
+                // Memory address
+                // if(filenames[i]==targetImage)
+                strcpy(completeFN, "olympus");
+                strcat(completeFN, "/");
+                strcat(completeFN, filenames[i]);
+
+                if(strlen(filenames[i])==0){
+                    cout<<"Error: Unable to read image:"<<completeFN<<endl;
+                    continue;
+                }
+
+                if(strcmp(completeFN,targetImage) == 0){
+                    targetFeatures = data[i];
+                }
+            }
+            
+            distanceM = &SSD;
+            
+            break;
+
+        
+    
         default:
             cout<<"Invalid feature type"<<endl;
             exit(-1);
     }
     
-    // Read feature vectors from file
-    vector<char *> filenames;
-    vector<vector<float>> data;
-    if(read_image_data_csv(featureVectorFile, filenames, data)!=0){
-        cout<<"Error: Unable to read feature vector file"<<endl;
-        exit(-1);
-    }
 
     // Calculating distance and sort
     vector<pair<string, float>> distances;
@@ -112,6 +200,7 @@ int main(int argc, char *argv[]){
     for(int i=0;i<outputImages && i<distances.size(); i++){
         cout<<distances[i].first<<" (Distance: "<< distances[i].second << ")"<<endl;
 
+        // strcpy(buffer, "olympus");
         strcpy(buffer, "olympus");
         strcat(buffer, "/");
         const char *str = distances[i].first.c_str();

@@ -44,18 +44,32 @@ int main(int argc, char *argv[]){
     }
 
     // Get feature type
-    //strcpy(featureType, argv[2]);
+    featureType = atoi(argv[2]);
 
     // Get the csv file name
     strcpy(csvfileName, argv[3]);
    
- 
+
+    // Read feature vectors from file
+    vector<char *> filenames;
+    vector<vector<float>> data;
+    char resNet[256];
+    strcpy(resNet, "ResNet18_olym.csv");
+    if(read_image_data_csv(resNet, filenames, data)!=0){
+        cout<<"Error: Unable to read feature vector file"<<endl;
+        exit(-1);
+    }
+
+    char completeFN[256];
     vector<float> featureVector;
+    vector<float> featureVector_2;
+    vector<float> featureVector_3;
+    vector<float> featureVector_4;
     // Loop over all the files in the image file listing
     while( (dp = readdir(dirp)) != NULL ){
 
         // Check if the file is an image
-        if( strstr(dp->d_name, ".jpg") || strstr(dp->d_name, ".png") || strstr(dp->d_name, ".ppm") || strstr(dp->d_name, ".tif") ){
+        if( strstr(dp->d_name, ".jpg") || strstr(dp->d_name, ".png") || strstr(dp->d_name, ".ppm") || strstr(dp->d_name, ".tif") || strstr(dp->d_name, ".jpeg")){
 
             //cout<<"Processing image files: "<<dp->d_name<<"\n";
 
@@ -70,18 +84,14 @@ int main(int argc, char *argv[]){
 
             cv::Mat img = cv::imread(buffer);
             cv::Mat image = img.clone();
-            // cv::Mat temp;
-            // image.convertTo(temp,  CV_32F, 1.0/255);
+    
             if(image.empty()){
                 cout<<"Error: Unable to read image:"<<buffer<<endl;
                 continue;
             }
 
             // Computing the feature for target images
-            featureType = atoi(argv[2]);
             switch(featureType){
-                // case "Baseline": 
-                // case "baseline":
                 case 1:
                     featureVector = baseline(image);
                     break;
@@ -91,25 +101,57 @@ int main(int argc, char *argv[]){
                 case 3:
                     featureVector = multiHM(image);
                     break;
+                case 4:
+                    featureVector = featureHM(image);
+                    break;
+                case 7:
+                    featureVector = computeColorHistogram(image);
+                    break;
+
+                case 8:
+                    for(size_t i=0; i<filenames.size(); ++i){
+                        strcpy(completeFN, "olympus");
+                        strcat(completeFN, "/");
+                        strcat(completeFN, filenames[i]);
+
+                        if(strlen(filenames[i])==0){
+                            cout<<"Error: Unable to read image:"<<completeFN<<endl;
+                            continue;
+                        }
+
+                        if(strcmp(completeFN,buffer) == 0){
+                            featureVector_2 = data[i];
+                        }
+                    }
+                    featureVector = computeColorHistogram(image);
+                    featureVector.insert(featureVector.end(), featureVector_2.begin(), featureVector_2.end());
+                    break;
+
+                case 9:
+                    for(size_t i=0; i<filenames.size(); ++i){
+                        strcpy(completeFN, "olympus");
+                        strcat(completeFN, "/");
+                        strcat(completeFN, filenames[i]);
+
+                        if(strlen(filenames[i])==0){
+                            cout<<"Error: Unable to read image:"<<completeFN<<endl;
+                            continue;
+                        }
+
+                        if(strcmp(completeFN,buffer) == 0){
+                            featureVector_2 = data[i];
+                        }
+                    }
+
+                    featureVector = featureHM(image);
+                    featureVector.insert(featureVector.end(), featureVector_2.begin(), featureVector_2.end());
+                    break;
+
                 default:
                     cout<<"Invalid feature type"<<endl;
                     break;
             }
             
-
-            // cout<<featureVector;
-            // exit(-1);
-            
-            // Converting Mat to float vec
-            // if (!featureVector.isContinuous()) {
-            //     featureVector = featureVector.clone(); // Make a continuous copy
-            // }
-            
-            // cv::Mat tmp;
-            // featureVector.convertTo(tmp, CV_32F);
-            // //cv::Mat reshapedFeatureVector = featureVector.reshape(1,1);
-            // vector<float> featureVectorFloat;
-            // featureVectorFloat.assign((float*)featureVector.datastart, (float*)featureVector.dataend);
 
             // Converting Mat to float vec
             // vector<float> featureVectorFloat;
@@ -119,17 +161,10 @@ int main(int argc, char *argv[]){
             //     }
             // }
 
-            // for(int i=0;i<featureVectorFloat.size();i++){
-            //     cout<<featureVectorFloat[i]<<" ";
-            // }
-            // exit(-1);
-            
-
+ 
             append_image_data_csv(csvfileName, dp->d_name, featureVector, 0);
 
         }
-
-
 
     }
 
