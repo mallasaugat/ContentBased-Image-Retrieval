@@ -1,9 +1,3 @@
-/*  
-    Saugat Malla
-
-    Project 2: Content-based Image Retrieval
-*/
-
 /*
 
     File to run after getting the feature vectors of all images in a csv file
