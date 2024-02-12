@@ -1,9 +1,3 @@
-/*  
-    Saugat Malla
-
-    Project 2: Content-based Image Retrieval
-*/
-
 /*
    Compute the features of each image in the specified directory and store them in a CSV file.
 
