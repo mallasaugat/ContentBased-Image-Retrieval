@@ -15,14 +15,6 @@ featureCompute: featureCompute.cpp features.cpp csv_util.cpp
 cbir: cbir.cpp features.cpp csv_util.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
 
-test: test.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
-
-test2: test2.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
-
-# vidDisplay: vidDisplay.cpp filters.cpp faceDetect.cpp 
-# 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $^ $(LIBS)
 
 .PHONY: clean
 
