@@ -1,9 +1,3 @@
-/*  
-    Saugat Malla
-
-    Project 2: Content-based Image Retrieval
-*/
-
 /*
     Different features and distance metrics implementation
 */
